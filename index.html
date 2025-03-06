@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dimensionamento de Enfermagem</title>
+    <style>
+        h1 {
+            font-family: Helvetica;
+            font-variant: small-caps;
+            font-size: 40px;
+        }
+        body {
+            font-family: Helvetica;
+            text-align: center;
+            margin: 20px;
+            background-color: #d4edda;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 40px;
+            border: 1px solid #ccc;
+            border-radius: 15px;
+            box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background-color: #81c784;
+            color: #fff;
+            font-family: Helvetica;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #66a76f;
+        }
+        hr {
+            margin: 20px 0;
+            border: 0;
+            height: 1px;
+            background: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dimensionamento de Enfermagem</h1>
+        <button onclick="cadastrarPaciente()">Cadastrar Novo Paciente</button>
+        <button onclick="exibirPacientes()">Exibir Lista de Pacientes</button>
+        <button onclick="dimensionamentoEnfermagem()">Dimensionamento de Enfermagem</button>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        let pacientes = [];
+
+        function solicitarEntrada(mensagem, valorAtual = "") {
+            let entrada;
+            do {
+                entrada = prompt(mensagem, valorAtual);
+                if (entrada === null) return null;
+                if (!entrada.trim()) alert("Preencher o campo!");
+            } while (!entrada.trim());
+            return entrada;
+        }
+
+        function cadastrarPaciente() {
+            let nome = solicitarEntrada("Nome do paciente:");
+            if (nome === null) return;
+            let mae = solicitarEntrada("Nome da mãe:");
+            if (mae === null) return;
+            let nascimento = solicitarEntrada("Data de nascimento (DD/MM/AAAA):");
+            if (nascimento === null) return;
+            let prontuario = solicitarEntrada("Número do prontuário:");
+            if (prontuario === null) return;
+
+            pacientes.push({ nome, mae, nascimento, prontuario, fugulin: null, pontos: null });
+            alert("Paciente cadastrado com sucesso!")
+            exibirPacientes();
+        }
+
+        function exibirPacientes() {
+            let output = "<h3>Lista de Pacientes:</h3>";
+            output += `<hr>`;
+            pacientes.forEach((p, index) => {
+                output += `<p><strong>${index + 1}. ${p.nome} - Prontuário: ${p.prontuario}</strong>`;
+                if (p.fugulin === null) {
+                    output += ` <button onclick="preencherFugulin(${index})" style="background-color: #FA8072; color: white; padding: 4px 6px; border-radius: 5px; cursor: pointer; margin: 5px;">Preencher Fugulin</button>`;
+                } else {
+                    output += `<p>Fugulin: ${p.pontos} - Classificação: ${p.fugulin}</p>`
+                    output += ` <button onclick="preencherFugulin(${index}, true)" style="background-color: #C0C0C0; color: white; padding: 4px 6px; border-radius: 5px; cursor: pointer; margin: 5px;">Editar Fugulin</button>`;
+                }
+                output += ` <button onclick="exibirDados(${index})" style="background-color: #C0C0C0; color: white; padding: 4px 6px; border-radius: 5px; cursor: pointer; margin: 5px;">Exibir Dados</button>`;
+                output += ` <button onclick="editarDados(${index})" style="background-color: #C0C0C0; color: white; padding: 4px 6px; border-radius: 5px; cursor: pointer; margin: 5px;">Editar Dados</button>`;
+                output += ` <button onclick="excluirPaciente(${index})" style="background-color: #C0C0C0; color: white; padding: 4px 6px; border-radius: 5px; cursor: pointer; margin: 5px;">Excluir</button>`;
+                output += `</p>`;
+
+                if (index < pacientes.length - 1) {
+                    output += `<hr>`;
+                }
+            });
+
+            output += `<p style="margin-top: 50px;"><strong>Total de pacientes cadastrados: ${pacientes.length}</strong></p>`;
+            output += `<p style="margin-top: 50px;">Para adicionar pacientes a esta lista você deve clicar em "Cadastrar Novo Paciente" e inserir os dados solicitados.<br>Em seguida, você precisa preencher o Fugulin deste paciente.<br><br>A qualquer momento você pode clicar em "Dimensionamento de Enfermagem" para consultar a quantidade mínima necessária de Técnicos de Enfermagem para o seu setor de acordo com os pacientes cadastrados no momento.</p>`;
+            document.getElementById("output").innerHTML = output;
+        }
+
+        function preencherFugulin(index) {
+            let soma = 0;
+            let criterios = ["Estado Mental", "Oxigenação", "Sinais Vitais", "Motilidade", "Deambulação", "Alimentação", "Cuidado Corporal", "Eliminação", "Terapêutica", "Integridade cutâneo-mucosa", "Curativo", "Tempo de Curativo"];
+            for (let i = 0; i < criterios.length; i++) {
+                let valor;
+                do {
+                    valor = prompt(`${criterios[i]} (1-4):`);
+                    if (valor === null) {
+                        exibirPacientes();
+                        return;
+                    }
+                    valor = parseInt(valor);
+                    if (isNaN(valor) || valor < 1 || valor > 4) {
+                        alert("Erro! Digite um valor entre 1 e 4.");
+                    }
+                } while (isNaN(valor) || valor < 1 || valor > 4);
+                soma += valor;
+            }
+            pacientes[index].pontos = soma;
+            pacientes[index].fugulin = classificarPaciente(soma);
+            alert(`Classificação: ${pacientes[index].fugulin}`);
+            exibirPacientes();
+        }
+
+        function classificarPaciente(pontos) {
+            if (pontos <= 17) return "Cuidados Mínimos";
+            if (pontos <= 22) return "Cuidados Intermediários";
+            if (pontos <= 28) return "Cuidados de Alta Dependência";
+            if (pontos <= 34) return "Cuidados Semi-intensivos";
+            return "Cuidados Intensivos";
+        }
+
+        function dimensionamentoEnfermagem() {
+            let regras = {
+                "Cuidados Mínimos": 6,
+                "Cuidados Intermediários": 4,
+                "Cuidados de Alta Dependência": 2.4,
+                "Cuidados Semi-intensivos": 2.4,
+                "Cuidados Intensivos": 1.33
+            };
+            let contagem = {};
+            let pacientesPendentes = pacientes.some(p => p.fugulin === null);
+
+            pacientes.forEach(p => {
+                if (p.fugulin) {
+                    contagem[p.fugulin] = (contagem[p.fugulin] || 0) + 1;
+                }
+            });
+            let output = "<h3>Dimensionamento de Enfermagem</h3>";
+            if (pacientesPendentes) {
+                output += `<p style='color: red;'><strong>Há pacientes pendentes de Fugulin!</strong></p>`;
+            }
+            let totalProfissionais = 0;
+            for (let tipo in regras) {
+                let qtd = contagem[tipo] ? (contagem[tipo] / regras[tipo]).toFixed(2) : 0;
+                totalProfissionais += parseFloat(qtd);
+                output += `<p>${tipo}: ${qtd} profissionais necessários</p>`;
+            }
+            output += `<p><strong>Total de profissionais necessários: ${totalProfissionais.toFixed(2)}</strong></p>`;
+            output += `<p style="margin-top: 50px;">(Considerando que o valor obtido através do cálculo matemático possa ser um número decimal,<br> você sempre deverá arredondar a quantidade de técnicos para cima.<br>Exemplo: Resultado = 1.18, então considere o mínimo de 2 técnicos)</p>`;
+            document.getElementById("output").innerHTML = output;
+        }
+
+        function exibirDados(index) {
+            let paciente = pacientes[index];
+            let fugulinTexto = paciente.fugulin ? paciente.fugulin : "Paciente ainda não classificado.";
+
+            alert(`Nome do Paciente: ${paciente.nome}\n
+            Nome da Mãe: ${paciente.mae}\n
+            Nascimento: ${paciente.nascimento}\n
+            Prontuário: ${paciente.prontuario}\n
+            Classificação FUGULIN: ${fugulinTexto}`);
+        }
+
+        function editarDados(index) {
+            let paciente = pacientes[index];
+            let tempPaciente = { ...paciente };
+
+            let nome = solicitarEntrada("Nome do paciente:", paciente.nome);
+            if (nome === null) return;
+            tempPaciente.nome = nome;
+
+            let mae = solicitarEntrada("Nome da mãe:", paciente.mae);
+            if (mae === null) return;
+            tempPaciente.mae = mae;
+
+            let nascimento = solicitarEntrada("Data de nascimento (DD/MM/AAAA):", paciente.nascimento);
+            if (nascimento === null) return;
+            tempPaciente.nascimento = nascimento;
+
+            let prontuario = solicitarEntrada("Número do prontuário:", paciente.prontuario);
+            if (prontuario === null) return;
+            tempPaciente.prontuario = prontuario;
+
+            paciente.nome = tempPaciente.nome;
+            paciente.mae = tempPaciente.mae;
+            paciente.nascimento = tempPaciente.nascimento;
+            paciente.prontuario = tempPaciente.prontuario;
+
+            alert("Dados do paciente atualizados com sucesso!");
+            exibirPacientes();
+        }
+
+        function excluirPaciente(index) {
+            if (confirm("Tem certeza que deseja excluir este paciente?")) {
+                pacientes.splice(index, 1);
+                alert("Paciente excluído com sucesso!");
+                exibirPacientes();
+            }
+        }
+    </script>
+</body>
+</html>
